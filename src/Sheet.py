@@ -52,8 +52,9 @@ class Sheet:
     def __findRow(self):
         self.defaultRow = -1
         self.foldingRow = -1
+        self.descriptionRow = -1
 
-        for i in range(0, 5):
+        for i in range(0, 6):
             value = self.sh.cell(i, 0).value
             if value == '__default__':
                 self.defaultRow = i
@@ -63,6 +64,8 @@ class Sheet:
                 self.typeRow = i
             elif value == '__name__':
                 self.nameRow = i
+            elif value == '__desc__':
+                self.descriptionRow = i
             else:
                 self.dataStartRow = i
                 break
@@ -214,6 +217,10 @@ class Sheet:
     def __convertPython(self):
         #dump数据#
         for row in range(self.dataStartRow, self.dataEndRow):
+             #跳过注释行
+            if self.sh.cell(row, 0).value == '#':
+                continue
+
             recordId = self.__getRecordId(row)
             record = self.python_obj[recordId] = {}
 
@@ -316,6 +323,9 @@ class Sheet:
 
             #折叠数据#
             for row in range(self.dataStartRow, self.dataEndRow):
+                 #跳过注释行
+                if self.sh.cell(row, 0).value == '#':
+                    continue
                 #取记录
                 recordId = self.__getRecordId(row)
                 record = self.python_obj[recordId]
@@ -395,7 +405,9 @@ class Sheet:
     #合并引用表到当前表
     def __mergePython(self):
         for row in range(self.dataStartRow, self.dataEndRow):
-
+            #跳过注释行
+            if self.sh.cell(row, 0).value == '#':
+                continue
             recordId = self.__getRecordId(row)
             record = self.python_obj[recordId]
 
