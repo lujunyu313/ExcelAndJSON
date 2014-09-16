@@ -8,21 +8,28 @@ import sys
 import getopt
 import json
 import time
+import os
 
 import SheetManager
+
+def mkdir(path):
+    if os.path.exists(path):
+        return
+    os.makedirs(path) 
+
 
 #单表模式
 def singlebook():
     opts, args = getopt.getopt(sys.argv[2:], "hi:o:f:")
 
-    file_type = ".json"
+    file_type = "json"
     for op, value in opts:
         if op == "-i":
             file_path = value
         elif op == "-o":
             output_path = value
         elif op == "-f":
-            file_type = '.' + value    
+            file_type = value    
         elif op == "-h":
             #TODO 写说明文字
             # usage()
@@ -39,6 +46,7 @@ def singlebook():
     SheetManager.addWorkBook(file_path)
     sheetNameList = SheetManager.getSheetNameList()
 
+    mkdir(output_path)
     print '导出文件到：', output_path
 
     for sheet_name in sheetNameList:
@@ -47,9 +55,13 @@ def singlebook():
             continue
 
         sheetJSON = SheetManager.exportJSON(sheet_name)
-        outputJSON = 'var ' + sheet_name + ' = ' + sheetJSON 
         
-        oFile = sheet_name + file_type
+        outputJSON = ''
+
+        if file_type == 'js':
+            outputJSON = 'var ' + sheet_name + ' = ' + sheetJSON
+    
+        oFile = sheet_name + '.' + file_type
         print '正在导出 ' , oFile
 
         f = file(output_path+oFile, 'w')
@@ -61,14 +73,14 @@ def singlebook():
 #主表模式
 def mainbook():
     opts, args = getopt.getopt(sys.argv[2:], "hi:o:f:")
-    file_type = ".json"
+    file_type = "json"
     for op, value in opts:
         if op == "-i":
             file_path = value
         elif op == "-o":
             output_path = value
         elif op == "-f":
-            file_type = "." + value
+            file_type = value
         elif op == "-h":
             #TODO 写说明文字
             # usage()
@@ -110,11 +122,36 @@ def mainbook():
     for workbookPath in workbookPathList:
         #读取所有sheet
         SheetManager.addWorkBook(workbookPath+".xlsx")
-    
+
+
+    print '表名检验...'
+       
+    #检验是否有重复表名#
+    sheetFlag = {}
+    for sheet in sheetList:
+        if '->' in sheet[0]:
+            sheet_output_name = sheet[0].split('->')[1]
+        else:
+            sheet_output_name = sheet[0]
+
+        sheetFlag[sheet_output_name] = 0    
+        
+    for sheet in sheetList:
+        if '->' in sheet[0]:
+            sheet_output_name = sheet[0].split('->')[1]
+        else:
+            sheet_output_name = sheet[0]
+
+        sheetFlag[sheet_output_name] += 1
+        if sheetFlag[sheet_output_name] > 1:
+            print sheet_output_name, '表被重复使用'
+            return   
+
+    mkdir(output_path)
+    print '导出文件到：', output_path
+
     #保存所有的输出对象#
     tableList = {}
-
-    print '导出文件到：', output_path
 
     #输出所有表#
     for sheet in sheetList:
@@ -130,21 +167,31 @@ def mainbook():
 
         sheetJSON = SheetManager.exportJSON(sheet_name,sheet_output_field)
 
-        outputJSON = 'var ' + sheet_name + ' = ' + sheetJSON
+        outputJSON = ''
+        
+        if file_type == 'js':
+            outputJSON = 'var ' + sheet_output_name + ' = '
 
-        tableList[sheet_name] = json.loads(sheetJSON)
+        outputJSON += sheetJSON
+        
+        tableList[sheet_output_name] = json.loads(sheetJSON)
 
-        oFile = sheet_name + file_type
+        oFile = sheet_output_name + '.' + file_type
         print '正在导出 ' , oFile
 
         f = file(output_path+oFile, 'w')
         f.write(outputJSON.encode('UTF-8'))
         f.close()
 
-    oFile = 'table' + file_type
+    oFile = 'table' + '.' + file_type
     print '正在导出 ' , oFile
 
-    outputJSON = 'var table' + ' = ' + json.dumps(tableList,sort_keys=True, indent=2,ensure_ascii=False)  
+    outputJSON = ''
+        
+    if file_type == 'js':
+        outputJSON = 'var ' + sheet_name + ' = ' + sheetJSON
+
+    outputJSON += json.dumps(tableList,sort_keys=True, indent=2,ensure_ascii=False)  
     fs = file(output_path + oFile,'w') 
     fs.write(outputJSON.encode('UTF-8'))
     fs.close()    

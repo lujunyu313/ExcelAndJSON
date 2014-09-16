@@ -218,7 +218,7 @@ class Sheet:
         #dump数据#
         for row in range(self.dataStartRow, self.dataEndRow):
              #跳过注释行
-            if self.sh.cell(row, 0).value == '#':
+            if self.sh.cell(row, 0).value == '~':
                 continue
 
             recordId = self.__getRecordId(row)
@@ -324,7 +324,7 @@ class Sheet:
             #折叠数据#
             for row in range(self.dataStartRow, self.dataEndRow):
                  #跳过注释行
-                if self.sh.cell(row, 0).value == '#':
+                if self.sh.cell(row, 0).value == '~':
                     continue
                 #取记录
                 recordId = self.__getRecordId(row)
@@ -406,7 +406,7 @@ class Sheet:
     def __mergePython(self):
         for row in range(self.dataStartRow, self.dataEndRow):
             #跳过注释行
-            if self.sh.cell(row, 0).value == '#':
+            if self.sh.cell(row, 0).value == '~':
                 continue
             recordId = self.__getRecordId(row)
             record = self.python_obj[recordId]
