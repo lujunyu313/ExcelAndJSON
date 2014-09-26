@@ -9,6 +9,7 @@ import getopt
 import json
 import time
 import os
+import re
 
 import SheetManager
 
@@ -175,7 +176,7 @@ def mainbook():
         outputJSON += sheetJSON
         
         tableList[sheet_output_name] = json.loads(sheetJSON)
-
+        sheet_output_name = re.sub(r'_',"",sheet_output_name)
         oFile = sheet_output_name + '.' + file_type
         print '正在导出 ' , oFile
 
