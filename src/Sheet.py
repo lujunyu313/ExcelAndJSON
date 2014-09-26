@@ -237,6 +237,8 @@ class Sheet:
                     record[fieldName] = field.default
                 elif value == 'null': #null为保留字
                     record[fieldName] = None
+                elif value == '###':    #如果值为###标记，则忽略
+                    continue
                 else:
                     #如果没有类型字段，就自动判断类型，只支持i、f、s
                     if fieldType == '' or fieldType == None:
@@ -338,7 +340,8 @@ class Sheet:
 
                 for col in range(startIndex, endIndex + 1):
                     field = self.fieldList[col]
-
+                    if record.has_key(field.name) == False: #不包含该键值
+                        continue
                     #保存折叠后的数据
                     if foldingType == "brace":
                         foldingObj[field.name] = record[field.name]
