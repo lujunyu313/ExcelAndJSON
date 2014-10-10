@@ -14,6 +14,7 @@ var skill = {
 }{
   "hero": {
     "1001": {
+      "1.0": 10, 
       "atk": 300, 
       "description": "我要打10个", 
       "hp": 100, 
@@ -22,6 +23,7 @@ var skill = {
       "res": "icon1"
     }, 
     "1002": {
+      "1.0": 20, 
       "atk": 200, 
       "description": "哈哈哈", 
       "hp": 200, 
@@ -30,6 +32,7 @@ var skill = {
       "res": "icon2"
     }, 
     "1003": {
+      "1.0": 30, 
       "atk": 100, 
       "description": "你妹", 
       "hp": 300, 

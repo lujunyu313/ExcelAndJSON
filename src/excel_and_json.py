@@ -122,8 +122,14 @@ def mainbook():
     #加载所有xlsx文件#
     for workbookPath in workbookPathList:
         #读取所有sheet
-        SheetManager.addWorkBook(workbookPath+".xlsx")
-
+        if os.path.isfile(workbookPath+".xlsx"):
+            SheetManager.addWorkBook(workbookPath+".xlsx")
+        elif os.path.isfile(workbookPath+".xlsm"):
+            SheetManager.addWorkBook(workbookPath+".xlsm")
+        elif os.path.isfile(workbookPath+".xls"):
+            SheetManager.addWorkBook(workbookPath+".xls")
+        else:
+            print workbookPath, '不存在'
 
     print '表名检验...'
        
