@@ -249,6 +249,9 @@ class Sheet:
                     elif fieldType == 'f':
                         record[fieldName] = value
                     elif fieldType == 's':
+                        #如果是整数，去除小数点
+                        if ctype == XL_CELL_NUMBER and value == int(value):
+                            value = int(value)
                         record[fieldName] = value
                     elif fieldType == 'b':
                         record[fieldName] = bool(value)
@@ -433,9 +436,14 @@ class Sheet:
 
                     record[fieldName] = reference_python_obj[reference_recordId]
 
-    def toJSON(self,sheet_output_field=[]):
-        json_obj = json.dumps(self.toPython(sheet_output_field), sort_keys=True, indent=2, ensure_ascii=False)
+    def toJSON(self,sheet_output_field=[],format=False):
+        if format:
+            json_obj = json.dumps(self.toPython(sheet_output_field), sort_keys=True, indent=2, ensure_ascii=False)
+        else:
+            json_obj = json.dumps(self.toPython(sheet_output_field), ensure_ascii=False)
         return json_obj
+    def toLua(self,sheet_output_field=[]):
+        return json.dumps(self.toPython(sheet_output_field), ensure_ascii=False)
 
 def openSheet(sh):
     return Sheet(sh)

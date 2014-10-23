@@ -18,29 +18,39 @@ def mkdir(path):
         return
     os.makedirs(path) 
 
+def usage():
+    print("------------------------------------------------------------")
+    print("-o: output file path like ./")
+    print("-i: input file path like web.xlsx")
+    print("-t:  output file type like js/json/lua default = json")
+    print("-f:  output file format default = False")
+    print("------------------------------------------------------------")
 
 #单表模式
 def singlebook():
-    opts, args = getopt.getopt(sys.argv[2:], "hi:o:f:")
+    opts, args = getopt.getopt(sys.argv[2:], "hfi:o:t:")
 
     file_type = "json"
+    file_format = False
     for op, value in opts:
         if op == "-i":
             file_path = value
         elif op == "-o":
             output_path = value
+        elif op == "-t":
+            file_type = value
         elif op == "-f":
-            file_type = value    
+            file_format = True
         elif op == "-h":
             #TODO 写说明文字
-            # usage()
+            usage()
             sys.exit()
 
     if not "file_path" in locals().keys():
-        # usage()
+        usage()
         sys.exit()
     elif not "output_path" in locals().keys():
-        # usage()
+        usage()
         sys.exit()
 
     print '读取并转换文件...'
@@ -73,32 +83,34 @@ def singlebook():
 
 #主表模式
 def mainbook():
-    opts, args = getopt.getopt(sys.argv[2:], "hi:o:f:")
+    opts, args = getopt.getopt(sys.argv[2:], "hfi:o:t:")
     file_type = "json"
+    file_format = False
     for op, value in opts:
         if op == "-i":
             file_path = value
         elif op == "-o":
             output_path = value
-        elif op == "-f":
+        elif op == "-t":
             file_type = value
+        elif op == "-f":
+            file_format = True
         elif op == "-h":
             #TODO 写说明文字
-            # usage()
+            usage()
             sys.exit()
 
     if not "file_path" in locals().keys():
-        # usage()
+        usage()
         sys.exit()
     elif not "output_path" in locals().keys():
-        # usage()
+        usage()
         sys.exit()
 
     #获取主表各种参数#
     wb = xlrd.open_workbook(file_path)
     sh = wb.sheet_by_index(0)
 
-    print '读取并转换文件...'
     workbookPathList = []
     sheetList = []
     for row in range(sh.nrows):
@@ -119,21 +131,8 @@ def mainbook():
             elif value != '':
                 sheet.append(value)
 
-    #加载所有xlsx文件#
-    for workbookPath in workbookPathList:
-        #读取所有sheet
-        if os.path.isfile(workbookPath+".xlsx"):
-            SheetManager.addWorkBook(workbookPath+".xlsx")
-        elif os.path.isfile(workbookPath+".xlsm"):
-            SheetManager.addWorkBook(workbookPath+".xlsm")
-        elif os.path.isfile(workbookPath+".xls"):
-            SheetManager.addWorkBook(workbookPath+".xls")
-        else:
-            print workbookPath, '不存在'
-
-    print '表名检验...'
-       
-    #检验是否有重复表名#
+ #检验是否有重复表名#
+    print '表名重复检验...'
     sheetFlag = {}
     for sheet in sheetList:
         if '->' in sheet[0]:
@@ -154,6 +153,21 @@ def mainbook():
             print sheet_output_name, '表被重复使用'
             return   
 
+    SheetManager.setSheetList(sheetList)
+
+    #加载所有xlsx文件#
+    print '读取并转换文件...'
+    for workbookPath in workbookPathList:
+        #读取所有sheet
+        if os.path.isfile(workbookPath+".xlsx"):
+            SheetManager.addWorkBook(workbookPath+".xlsx")
+        elif os.path.isfile(workbookPath+".xlsm"):
+            SheetManager.addWorkBook(workbookPath+".xlsm")
+        elif os.path.isfile(workbookPath+".xls"):
+            SheetManager.addWorkBook(workbookPath+".xls")
+        else:
+            print workbookPath, '不存在'
+
     mkdir(output_path)
     print '导出文件到：', output_path
 
@@ -171,37 +185,29 @@ def mainbook():
             sheet_output_name = sheet_name = sheet[0]
 
         sheet_output_field = sheet[1:]
+        output = ''
 
-        sheetJSON = SheetManager.exportJSON(sheet_name,sheet_output_field)
+        if file_type == 'lua':
+            output = "return " + "'" + SheetManager.exportLua(sheet_name,sheet_output_field) + "'"
+        else:
+            sheetJSON = SheetManager.exportJSON(sheet_name,sheet_output_field,file_format)
+            
+            if file_type == 'js':
+                output = 'var ' + sheet_output_name + ' = '
 
-        outputJSON = ''
-        
-        if file_type == 'js':
-            outputJSON = 'var ' + sheet_output_name + ' = '
+            output += sheetJSON
 
-        outputJSON += sheetJSON
-        
-        tableList[sheet_output_name] = json.loads(sheetJSON)
+            if file_type == 'js':
+                output += ';\n'
+
+            
         sheet_output_name = re.sub(r'_',"",sheet_output_name)
         oFile = sheet_output_name + '.' + file_type
         print '正在导出 ' , oFile
 
         f = file(output_path+oFile, 'w')
-        f.write(outputJSON.encode('UTF-8'))
+        f.write(output.encode('UTF-8'))
         f.close()
-
-    oFile = 'table' + '.' + file_type
-    print '正在导出 ' , oFile
-
-    outputJSON = ''
-        
-    if file_type == 'js':
-        outputJSON = 'var ' + sheet_name + ' = ' + sheetJSON
-
-    outputJSON += json.dumps(tableList,sort_keys=True, indent=2,ensure_ascii=False)  
-    fs = file(output_path + oFile,'w') 
-    fs.write(outputJSON.encode('UTF-8'))
-    fs.close()    
     
     print '导出文件结束'
 

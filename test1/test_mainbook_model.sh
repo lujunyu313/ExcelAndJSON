@@ -1,1 +1,1 @@
-python ../src/excel_and_json.py mainbook -o ./ -i mwb.xlsx -f js
+python ../src/excel_and_json.py mainbook -o ./ -i mwb.xlsx -t js -f
